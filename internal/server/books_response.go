@@ -11,21 +11,17 @@ type bookResponse struct {
 	InventoryCents int    `json:"inventory_cents"`
 }
 
-func toBookResponse(book *domain.Book) bookResponse {
-	return bookResponse{
-		Author:         book.Author,
-		Title:          book.Title,
-		PriceCents:     book.PriceCents,
-		Copies:         book.Copies,
-		IsAvailable:    book.IsAvailable,
-		InventoryCents: book.InventoryCents,
-	}
-}
-
 func toBookResponses(domainBooks []*domain.Book) []bookResponse {
 	response := make([]bookResponse, len(domainBooks))
 	for i, book := range domainBooks {
-		response[i] = toBookResponse(book)
+		response[i] = bookResponse{
+			Author:         book.Author,
+			Title:          book.Title,
+			PriceCents:     book.PriceCents,
+			Copies:         book.Copies,
+			IsAvailable:    book.IsAvailable,
+			InventoryCents: book.InventoryCents,
+		}
 	}
 
 	return response
