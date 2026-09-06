@@ -6,38 +6,53 @@ import (
 	"github.com/kienstra/orch/internal/params"
 
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	_ "modernc.org/sqlite"
 )
+
+type PgRepository struct {
+	Db *sqlx.DB
+}
+
+type Book struct {
+	Author     string `db:"author"`
+	Title      string `db:"title"`
+	Copies     int    `db:"copies"`
+	PriceCents int    `db:"price_cents"`
+}
+
+type DbConfig struct {
+	DbUser string
+	DbPass string
+	DbHost string
+	DbName string
+}
 
 type Repository interface {
 	GetBooks(context.Context, *params.Book) ([]*Book, error)
 }
 
-type RepositoryV1 struct {
-	Db *sqlx.DB
-}
-
-type Book struct {
-	Author     string
-	Title      string
-	Copies     int
-	PriceCents int
-}
-
-func NewRepositoryV1() (*RepositoryV1, error) {
-	db, err := sqlx.Open("sqlite", "orch.db")
+func NewPgRepository(url string) (*PgRepository, error) {
+	db, err := sqlx.Connect("postgres", url)
 	if err != nil {
 		return nil, err
 	}
 
-	defer func() { _ = db.Close() }()
-	return &RepositoryV1{db}, nil
+	return &PgRepository{Db: db}, nil
 }
 
-func (r *RepositoryV1) GetBooks(ctx context.Context, params *params.Book) ([]*Book, error) {
+func (r *PgRepository) Close() {
+	_ = r.Db.Close()
+}
+
+func (r *PgRepository) GetBooks(ctx context.Context, params *params.Book) ([]*Book, error) {
 	query, args := BooksSql(params)
 
 	rows, err := r.Db.NamedQueryContext(ctx, query, args)
+	if err != nil {
+		return nil, err
+	}
+
 	defer func() { rows.Close() }()
 
 	var books []*Book
@@ -55,7 +70,7 @@ func (r *RepositoryV1) GetBooks(ctx context.Context, params *params.Book) ([]*Bo
 }
 
 func BooksSql(params *params.Book) (string, map[string]any) {
-	return `SELECT title, author
+	return `SELECT title, author, price_cents, copies
 		FROM books
 		WHERE author = :author
 		OFFSET :offset

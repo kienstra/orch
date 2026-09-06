@@ -1,0 +1,1 @@
+CREATE TABLE books (author text, title text, copies int, price_cents int);

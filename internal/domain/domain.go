@@ -3,12 +3,12 @@ package domain
 import "github.com/kienstra/orch/internal/repository"
 
 type Book struct {
-	Author         string
-	Title          string
-	PriceCents     int
-	Copies         int
-	IsAvailable    bool
-	InventoryCents int
+	Author         string `json:"author"`
+	Title          string `json:"title"`
+	PriceCents     int    `json:"price_cents"`
+	Copies         int    `json:"copies"`
+	IsAvailable    bool   `json:"is_available"`
+	InventoryCents int    `json:"inventory_cents"`
 }
 
 func GetBooks(repoBooks []*repository.Book) []*Book {

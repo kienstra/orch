@@ -2,20 +2,23 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/kienstra/orch/internal/repository"
 	"github.com/kienstra/orch/internal/server"
 )
 
 func main() {
-	// Only need to inject repository. The domain is a pure function.
-	repo, err := repository.NewRepositoryV1()
+	repo, err := repository.NewPgRepository(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal(err)
-
-		return
 	}
 
+	defer repo.Close()
+
 	s := &server.Server{Repository: repo}
-	s.Serve()
+	err = s.Serve(os.Getenv("APP_PORT"))
+	if err != nil {
+		log.Fatal(err)
+	}
 }

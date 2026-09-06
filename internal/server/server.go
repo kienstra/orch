@@ -1,11 +1,13 @@
 package server
 
 import (
+	"encoding/json"
+
+	"net/http"
+
 	"github.com/kienstra/orch/internal/domain"
 	"github.com/kienstra/orch/internal/params"
 	"github.com/kienstra/orch/internal/repository"
-
-	"net/http"
 
 	"github.com/gorilla/mux"
 )
@@ -14,39 +16,42 @@ type Server struct {
 	Repository repository.Repository
 }
 
-func (h *Server) Serve() {
+func (s *Server) Serve(port string) error {
 	router := mux.NewRouter()
-
-	router.HandleFunc("/books", h.GetBooks).Methods(http.MethodGet)
+	router.HandleFunc("/books", s.GetBooks).Methods(http.MethodGet)
+	return http.ListenAndServe(":"+port, router)
 }
 
-func (h *Server) GetBooks(responseWriter http.ResponseWriter, req *http.Request) {
-	reqParams, err := params.GetBooks(req)
+// 1. Imperative shell ---------------------------v
+func (s *Server) GetBooks(w http.ResponseWriter, req *http.Request) {
+	// 2. Functional core
+	bookParams, err := params.GetBooks(req)
 	if err != nil {
-		h.handleError(responseWriter, err)
+		handleError(w, err.Error(), http.StatusBadRequest)
 
 		return
 	}
 
-	repoBooks, err := h.Repository.GetBooks(req.Context(), reqParams)
+	// 3. Imperative shell
+	repoBooks, err := s.Repository.GetBooks(req.Context(), bookParams)
 	if err != nil {
-		h.handleError(responseWriter, err)
+		handleError(w, err.Error(), http.StatusInternalServerError)
 
 		return
 	}
 
+	// 4. Functional core
 	domainBooks := domain.GetBooks(repoBooks)
-	respond(responseWriter, domainBooks)
+
+	// 5. Imperative shell.
+	respond(w, domainBooks)
 }
 
-func (h *Server) handleError(responseWriter http.ResponseWriter, _ error) {
-	http.Error(responseWriter, err.Error(), http.StatusInternalServerError)
+func handleError(w http.ResponseWriter, message string, errorCode int) {
+	http.Error(w, message, errorCode)
 }
 
-func respond(responseWriter http.ResponseWriter, response any) {
-	b := []byte(response)
-	_, err := responseWriter.Write(b)
-	if err != nil {
-		http.Error(responseWriter, err.Error(), http.StatusInternalServerError)
-	}
+func respond(w http.ResponseWriter, response any) {
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(response)
 }
