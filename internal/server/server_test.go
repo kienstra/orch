@@ -12,7 +12,7 @@ import (
 func TestGetBook(t *testing.T) {
 	tt := []struct {
 		name     string
-		params   string
+		query    string
 		expected map[string]any
 		wantErr  bool
 	}{
@@ -44,7 +44,7 @@ func TestGetBook(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		bookParams, err := query.GetBooks(httptest.NewRequest("GET", tc.params, nil))
+		bookParams, err := query.GetBooks(httptest.NewRequest("GET", tc.query, nil))
 		isErr := err != nil
 		assert.Equal(t, tc.wantErr, isErr)
 		if tc.wantErr {

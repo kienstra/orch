@@ -6,7 +6,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/kienstra/orch/internal/query"
 	_ "github.com/lib/pq"
-	_ "modernc.org/sqlite"
 )
 
 type PgRepository struct {
@@ -45,14 +44,14 @@ func (r *PgRepository) Close() {
 }
 
 func (r *PgRepository) GetBooks(ctx context.Context, params *query.Book) ([]*Book, error) {
-	query, args := BooksSql(params)
+	sql, args := BooksSql(params)
 
-	rows, err := r.Db.NamedQueryContext(ctx, query, args)
+	rows, err := r.Db.NamedQueryContext(ctx, sql, args)
 	if err != nil {
 		return nil, err
 	}
 
-	defer func() { rows.Close() }()
+	defer func() { _ = rows.Close() }()
 
 	var books []*Book
 	for rows.Next() {
@@ -72,6 +71,7 @@ func BooksSql(params *query.Book) (string, map[string]any) {
 	return `SELECT title, author, price_cents, copies
 		FROM books
 		WHERE author = :author
+		ORDER BY author
 		OFFSET :offset
 		LIMIT :limit`, map[string]any{
 			"author": params.Author,

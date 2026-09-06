@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/kienstra/orch/internal/domain"
@@ -17,7 +18,17 @@ type Server struct {
 func (s *Server) Serve(port string) error {
 	router := mux.NewRouter()
 	router.HandleFunc("/books", s.GetBooks).Methods(http.MethodGet)
-	return http.ListenAndServe(":"+port, router)
+
+	httpServer := &http.Server{
+		Addr: ":" + port,
+		Handler: router,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+
+	return httpServer.ListenAndServe()
 }
 
 // 1. Imperative shell ---------------------------v
