@@ -1,7 +1,5 @@
 package domain
 
-import "github.com/kienstra/orch/internal/repository"
-
 type Book struct {
 	Author         string `json:"author"`
 	Title          string `json:"title"`
@@ -11,7 +9,7 @@ type Book struct {
 	InventoryCents int    `json:"inventory_cents"`
 }
 
-func GetBooks(repoBooks []*repository.Book) []*Book {
+func GetBooks(repoBooks []*Book) []*Book {
 	books := make([]*Book, len(repoBooks))
 	for i, book := range repoBooks {
 		books[i] = &Book{

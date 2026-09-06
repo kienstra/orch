@@ -20,8 +20,8 @@ func (s *Server) Serve(port string) error {
 	router.HandleFunc("/books", s.GetBooks).Methods(http.MethodGet)
 
 	httpServer := &http.Server{
-		Addr: ":" + port,
-		Handler: router,
+		Addr:              ":" + port,
+		Handler:           router,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      15 * time.Second,
@@ -52,8 +52,11 @@ func (s *Server) GetBooks(w http.ResponseWriter, req *http.Request) {
 	// 4. Functional core
 	domainBooks := domain.GetBooks(repoBooks)
 
-	// 5. Imperative shell.
-	respond(w, domainBooks)
+	// 5. Functional core
+	res := toBookResponses(domainBooks)
+
+	// 6. Imperative shell.
+	respond(w, res)
 }
 
 func handleError(w http.ResponseWriter, message string, errorCode int) {

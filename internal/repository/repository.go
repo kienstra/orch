@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/kienstra/orch/internal/domain"
 	"github.com/kienstra/orch/internal/query"
 	_ "github.com/lib/pq"
 )
@@ -12,7 +13,7 @@ type PgRepository struct {
 	Db *sqlx.DB
 }
 
-type Book struct {
+type bookRow struct {
 	Author     string `db:"author"`
 	Title      string `db:"title"`
 	Copies     int    `db:"copies"`
@@ -27,7 +28,7 @@ type DbConfig struct {
 }
 
 type Repository interface {
-	GetBooks(context.Context, *query.Book) ([]*Book, error)
+	GetBooks(context.Context, *query.Book) ([]*domain.Book, error)
 }
 
 func NewPgRepository(url string) (*PgRepository, error) {
@@ -43,7 +44,7 @@ func (r *PgRepository) Close() {
 	_ = r.Db.Close()
 }
 
-func (r *PgRepository) GetBooks(ctx context.Context, params *query.Book) ([]*Book, error) {
+func (r *PgRepository) GetBooks(ctx context.Context, params *query.Book) ([]*domain.Book, error) {
 	sql, args := BooksSql(params)
 
 	rows, err := r.Db.NamedQueryContext(ctx, sql, args)
@@ -53,15 +54,24 @@ func (r *PgRepository) GetBooks(ctx context.Context, params *query.Book) ([]*Boo
 
 	defer func() { _ = rows.Close() }()
 
-	var books []*Book
+	var books []*domain.Book
 	for rows.Next() {
-		var book Book
+		var book bookRow
 		err = rows.StructScan(&book)
 		if err != nil {
 			return nil, err
 		}
 
-		books = append(books, &book)
+		books = append(books, &domain.Book{
+			Author:     book.Author,
+			Title:      book.Title,
+			Copies:     book.Copies,
+			PriceCents: book.PriceCents,
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return books, nil
