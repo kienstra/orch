@@ -1,10 +1,10 @@
-package params_test
+package query_test
 
 import (
 	"net/http/httptest"
 	"testing"
 
-	params "github.com/kienstra/orch/internal/params"
+	params "github.com/kienstra/orch/internal/query"
 
 	"github.com/stretchr/testify/assert"
 )

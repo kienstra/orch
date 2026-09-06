@@ -3,9 +3,8 @@ package repository
 import (
 	"context"
 
-	"github.com/kienstra/orch/internal/params"
-
 	"github.com/jmoiron/sqlx"
+	"github.com/kienstra/orch/internal/query"
 	_ "github.com/lib/pq"
 	_ "modernc.org/sqlite"
 )
@@ -29,7 +28,7 @@ type DbConfig struct {
 }
 
 type Repository interface {
-	GetBooks(context.Context, *params.Book) ([]*Book, error)
+	GetBooks(context.Context, *query.Book) ([]*Book, error)
 }
 
 func NewPgRepository(url string) (*PgRepository, error) {
@@ -45,7 +44,7 @@ func (r *PgRepository) Close() {
 	_ = r.Db.Close()
 }
 
-func (r *PgRepository) GetBooks(ctx context.Context, params *params.Book) ([]*Book, error) {
+func (r *PgRepository) GetBooks(ctx context.Context, params *query.Book) ([]*Book, error) {
 	query, args := BooksSql(params)
 
 	rows, err := r.Db.NamedQueryContext(ctx, query, args)
@@ -69,7 +68,7 @@ func (r *PgRepository) GetBooks(ctx context.Context, params *params.Book) ([]*Bo
 	return books, nil
 }
 
-func BooksSql(params *params.Book) (string, map[string]any) {
+func BooksSql(params *query.Book) (string, map[string]any) {
 	return `SELECT title, author, price_cents, copies
 		FROM books
 		WHERE author = :author

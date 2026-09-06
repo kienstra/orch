@@ -2,14 +2,12 @@ package server
 
 import (
 	"encoding/json"
-
 	"net/http"
 
-	"github.com/kienstra/orch/internal/domain"
-	"github.com/kienstra/orch/internal/params"
-	"github.com/kienstra/orch/internal/repository"
-
 	"github.com/gorilla/mux"
+	"github.com/kienstra/orch/internal/domain"
+	"github.com/kienstra/orch/internal/query"
+	"github.com/kienstra/orch/internal/repository"
 )
 
 type Server struct {
@@ -25,7 +23,7 @@ func (s *Server) Serve(port string) error {
 // 1. Imperative shell ---------------------------v
 func (s *Server) GetBooks(w http.ResponseWriter, req *http.Request) {
 	// 2. Functional core
-	bookParams, err := params.GetBooks(req)
+	bookParams, err := query.GetBooks(req)
 	if err != nil {
 		handleError(w, err.Error(), http.StatusBadRequest)
 

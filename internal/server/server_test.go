@@ -1,11 +1,10 @@
 package server_test
 
 import (
+	"net/http/httptest"
 	"testing"
 
-	"net/http/httptest"
-
-	"github.com/kienstra/orch/internal/params"
+	"github.com/kienstra/orch/internal/query"
 	"github.com/kienstra/orch/internal/repository"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,12 +18,12 @@ func TestGetBook(t *testing.T) {
 	}{
 		{
 			name:    "empty",
-			params:  "/",
+			query:   "/",
 			wantErr: true,
 		},
 		{
-			name:   "page 1",
-			params: "/?author=Milton&page=1",
+			name:  "page 1",
+			query: "/?author=Milton&page=1",
 			expected: map[string]any{
 				"author": "Milton",
 				"offset": 0,
@@ -33,8 +32,8 @@ func TestGetBook(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:   "page 1",
-			params: "/?page=4&limit=500&author=Milton",
+			name:  "page 1",
+			query: "/?page=4&limit=500&author=Milton",
 			expected: map[string]any{
 				"author": "Milton",
 				"offset": 1500,
@@ -45,7 +44,7 @@ func TestGetBook(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		bookParams, err := params.GetBooks(httptest.NewRequest("GET", tc.params, nil))
+		bookParams, err := query.GetBooks(httptest.NewRequest("GET", tc.params, nil))
 		isErr := err != nil
 		assert.Equal(t, tc.wantErr, isErr)
 		if tc.wantErr {
