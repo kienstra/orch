@@ -12,49 +12,49 @@ import (
 func TestGetBook(t *testing.T) {
 	tt := []struct {
 		name     string
-		params   string
+		req      string
 		expected *params.Book
 		wantErr  bool
 	}{
 		{
 			name:     "empty",
-			params:   "/",
+			req:      "/",
 			expected: nil,
 			wantErr:  true,
 		},
 		{
 			name:     "only page",
-			params:   "/?page=100",
+			req:      "/?page=100",
 			expected: nil,
 			wantErr:  true,
 		},
 		{
 			name:     "only limit",
-			params:   "/?limit=5",
+			req:      "/?limit=5",
 			expected: nil,
 			wantErr:  true,
 		},
 		{
 			name:     "limit too low",
-			params:   "/?author=Hemingway&limit=-1&page=100",
+			req:      "/?author=Hemingway&limit=-1&page=100",
 			expected: nil,
 			wantErr:  true,
 		},
 		{
 			name:     "limit too high",
-			params:   "/?author=Hemingway&limit=1001&page=100",
+			req:      "/?author=Hemingway&limit=1001&page=100",
 			expected: nil,
 			wantErr:  true,
 		},
 		{
 			name:     "page too low",
-			params:   "/?author=Hemingway&limit=1001&page=-1",
+			req:      "/?author=Hemingway&limit=1001&page=-1",
 			expected: nil,
 			wantErr:  true,
 		},
 		{
-			name:   "valid page and limit",
-			params: "/?author=Hemingway&limit=5&page=100",
+			name: "valid page and limit",
+			req:  "/?author=Hemingway&limit=5&page=100",
 			expected: &params.Book{
 				Author: "Hemingway",
 				Limit:  5,
@@ -65,7 +65,7 @@ func TestGetBook(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		actual, err := params.GetBooks(httptest.NewRequest("GET", tc.params, nil))
+		actual, err := params.GetBooks(httptest.NewRequest("GET", tc.req, nil))
 		assert.Equal(t, tc.expected, actual, tc.name)
 		isErr := err != nil
 
