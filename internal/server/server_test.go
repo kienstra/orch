@@ -1,15 +1,18 @@
 package server_test
 
 import (
+	"encoding/json"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/kienstra/orch/internal/domain"
 	"github.com/kienstra/orch/internal/query"
 	"github.com/kienstra/orch/internal/repository"
+	"github.com/kienstra/orch/internal/server"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetBook(t *testing.T) {
+func TestParamsToSql(t *testing.T) {
 	tt := []struct {
 		name     string
 		query    string
@@ -55,4 +58,18 @@ func TestGetBook(t *testing.T) {
 		assert.Equal(t, tc.expected, dbArgs)
 		assert.Contains(t, sql, "FROM books")
 	}
+}
+
+func TestDomainToResponse(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	server.Respond(recorder, server.ToBookResponses([]*domain.Book{
+		{
+			Author: "Milton",
+			Title:  "Paradise Lost",
+		},
+	}))
+
+	var got []map[string]any
+	_ = json.Unmarshal(recorder.Body.Bytes(), &got)
+	assert.Equal(t, "Milton", got[0]["author"])
 }

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/kienstra/orch/internal/domain"
 	"github.com/kienstra/orch/internal/query"
 	"github.com/kienstra/orch/internal/repository"
 )
@@ -34,36 +33,34 @@ func (s *Server) Serve(port string) error {
 // 1. Imperative shell ---------------------------v
 func (s *Server) GetBooks(w http.ResponseWriter, req *http.Request) {
 	// 2. Functional core
-	bookParams, err := query.GetBooks(req)
+	input, err := query.GetBooks(req)
 	if err != nil {
 		handleError(w, err.Error(), http.StatusBadRequest)
 
 		return
 	}
 
-	// 3. Imperative shell
-	repoBooks, err := s.Repository.GetBooks(req.Context(), bookParams)
+	// 3. Functional core: construct SQL query inside repository
+	// 4. Imperative shell: query DB
+	repoBooks, err := s.Repository.GetBooks(req.Context(), input)
 	if err != nil {
 		handleError(w, err.Error(), http.StatusInternalServerError)
 
 		return
 	}
 
-	// 4. Functional core
-	domainBooks := domain.GetBooks(repoBooks)
-
 	// 5. Functional core
-	res := toBookResponses(domainBooks)
+	res := ToBookResponses(repoBooks)
 
 	// 6. Imperative shell.
-	respond(w, res)
+	Respond(w, res)
 }
 
 func handleError(w http.ResponseWriter, message string, errorCode int) {
 	http.Error(w, message, errorCode)
 }
 
-func respond(w http.ResponseWriter, response any) {
+func Respond(w http.ResponseWriter, response any) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(response)
 }
